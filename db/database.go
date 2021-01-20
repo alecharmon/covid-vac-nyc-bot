@@ -2,10 +2,9 @@ package db
 
 import (
 	"log"
-	"os"
 	"sync"
 
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -14,14 +13,7 @@ var once sync.Once
 
 func GetDb() *gorm.DB {
 	once.Do(func() {
-		dsn := "host=" + os.Getenv("HOST")
-		dsn += " user=" + os.Getenv("USER")
-		dsn += " pasword=" + os.Getenv("PASWORD")
-		dsn += " dbname=" + os.Getenv("DBNAME")
-		dsn += " port=" + os.Getenv("PORT")
-
-		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-
+		db, err := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -1,37 +1,53 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"os"
 
+	"github.com/alecharmon/covid-vac-nyc-bot/db"
 	"github.com/alecharmon/covid-vac-nyc-bot/sites"
+	"github.com/alecharmon/covid-vac-nyc-bot/twitter"
 	"github.com/joho/godotenv"
+	"gorm.io/gorm"
 )
 
 func main() {
 	godotenv.Load()
 
-	for _, v := range sites.GetSites() {
-		fmt.Println(v.Avaliable())
+	creds := twitter.Credentials{
+		AccessToken:       os.Getenv("TWITTER_ACCESS_TOKEN"),
+		AccessTokenSecret: os.Getenv("TWITTER_ACCESS_TOKEN_SECRET"),
+		ConsumerKey:       os.Getenv("TWITTER_CONSUMER_KEY"),
+		ConsumerSecret:    os.Getenv("TWITTER_CONSUMER_SECRET"),
 	}
 
-	// fmt.Println("Go-Twitter Bot v0.01")
-	// creds := twitter.Credentials{
-	// 	AccessToken:       os.Getenv("ACCESS_TOKEN"),
-	// 	AccessTokenSecret: os.Getenv("ACCESS_TOKEN_SECRET"),
-	// 	ConsumerKey:       os.Getenv("CONSUMER_KEY"),
-	// 	ConsumerSecret:    os.Getenv("CONSUMER_SECRET"),
-	// }
+	client, err := twitter.GetClient(&creds)
+	if err != nil {
+		log.Println("Error getting Twitter Client")
+		log.Println(err)
+	}
 
-	// fmt.Printf("%+v\n", creds)
+	db.GetDb().AutoMigrate(&sites.Site{})
+	for _, v := range sites.GetSites() {
+		log.Println("Site ", v)
+		lastRecord := sites.GetFromName(v.Name)
+		if lastRecord.ID == "" {
+			log.Println("New Site ", v)
+			v.ID = sites.GetKey(v.Name)
+			db.GetDb().Create(&v)
+			client.Statuses.Update("New Site: "+v.ToString(), nil)
+		} else if v.Avaliable() && lastRecord.Avaliable() == false {
+			log.Println("New Availability @ Site ", lastRecord)
+			lastRecord.Status = v.Status
+			db.GetDb().Save(&lastRecord)
+			client.Statuses.Update("Site Update: "+v.ToString(), nil)
+		}
 
-	// client, err := twitter.getClient(&creds)
-	// if err != nil {
-	// 	log.Println("Error getting Twitter Client")
-	// 	log.Println(err)
-	// }
+	}
+}
 
-	// // Print out the pointer to our client
-	// // for now so it doesn't throw errors
-	// fmt.Printf("%+v\n", client)
-
+func dropTableIfExists(db *gorm.DB, dst interface{}) {
+	if db.Migrator().HasTable(dst) {
+		db.Migrator().DropTable(dst)
+	}
 }

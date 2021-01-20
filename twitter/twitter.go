@@ -23,7 +23,7 @@ type Credentials struct {
 // this will take in a pointer to a Credential struct which will contain
 // everything needed to authenticate and return a pointer to a twitter Client
 // or an error
-func getClient(creds *Credentials) (*twitter.Client, error) {
+func GetClient(creds *Credentials) (*twitter.Client, error) {
 	// Pass in your consumer key (API Key) and your Consumer Secret (API Secret)
 	config := oauth1.NewConfig(creds.ConsumerKey, creds.ConsumerSecret)
 	// Pass in your Access Token and your Access Token Secret
