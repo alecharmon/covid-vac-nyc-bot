@@ -48,3 +48,7 @@ func GetClient(creds *Credentials) (*twitter.Client, error) {
 	log.Printf("User's ACCOUNT:\n%+v\n", user)
 	return client, nil
 }
+
+func NewParams() *twitter.StatusUpdateParams {
+	return &twitter.StatusUpdateParams{}
+}

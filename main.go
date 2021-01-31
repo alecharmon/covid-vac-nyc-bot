@@ -27,22 +27,60 @@ func main() {
 		log.Println(err)
 	}
 
+	availableSites := []*sites.Site{}
+	unavailableSites := []*sites.Site{}
 	db.GetDb().AutoMigrate(&sites.Site{})
 	for _, v := range sites.GetSites() {
-		log.Println("Site ", v)
-		lastRecord := sites.GetFromName(v.Name)
-		if lastRecord.ID == "" {
-			log.Println("New Site ", v)
-			v.ID = sites.GetKey(v.Name)
-			db.GetDb().Create(&v)
-			client.Statuses.Update("New Site: "+v.ToString(), nil)
-		} else if v.Avaliable() && lastRecord.Avaliable() == false {
-			log.Println("New Availability @ Site ", lastRecord)
-			lastRecord.Status = v.Status
-			db.GetDb().Save(&lastRecord)
-			client.Statuses.Update("Site Update: "+v.ToString(), nil)
+		if v.IsNewSite() || sites.GetFromName(v.Name).Avaliable() != v.Avaliable() {
+			if v.Avaliable() {
+				availableSites = append(availableSites, v)
+			} else {
+				unavailableSites = append(unavailableSites, v)
+			}
 		}
+	}
 
+	// Available
+	if len(availableSites) > 0 {
+		messages := []string{}
+		message := "The following sites now have appointments available: \n "
+		for _, s := range availableSites {
+			newSite := s.IsNewSite()
+			prefix := ""
+			if newSite {
+				prefix = "*New Site* "
+			}
+			message += prefix + s.ToString() + "\n "
+			if newSite {
+				db.GetDb().Create(s)
+			} else {
+				record := sites.GetFromName(s.Name)
+				if record == nil {
+					log.Println("Not a new site but not retrivable by name " + s.ToString())
+				}
+				record.Status = s.Status
+				db.GetDb().Save(&record)
+			}
+			if len(message) > 280 {
+				messages = append(messages, message)
+				message = ""
+			}
+		}
+		tail := "💉💊🎊 for more info https://am-i-eligible.covid19vaccine.health.ny.gov/"
+		if len(message)+len(tail) >= 280 {
+			messages = append(messages, message)
+			message = ""
+		}
+		message += tail
+		messages = append(messages, message)
+		config := twitter.NewParams()
+		for _, message := range messages {
+			tweet, resp, err := client.Statuses.Update(message, config)
+			if err != nil {
+				log.Fatal(message, err, resp)
+			}
+			config.InReplyToStatusID = tweet.ID
+		}
 	}
 }
 
