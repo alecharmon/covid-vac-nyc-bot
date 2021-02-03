@@ -46,11 +46,7 @@ func main() {
 		message := "The following sites now have appointments available: \n "
 		for _, s := range availableSites {
 			newSite := s.IsNewSite()
-			prefix := ""
-			if newSite {
-				prefix = "*New Site* "
-			}
-			message += prefix + s.ToString() + "\n "
+			message += "•" + s.ToString() + "\n "
 			if newSite {
 				db.GetDb().Create(s)
 			} else {

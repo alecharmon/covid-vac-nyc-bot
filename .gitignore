@@ -1,2 +1,2 @@
 .env
-.gorm.db
+gorm.db
