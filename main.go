@@ -24,7 +24,7 @@ func main() {
 	client, err := twitter.GetClient(&creds)
 	if err != nil {
 		log.Println("Error getting Twitter Client")
-		log.Println(err)
+		log.Fatal(err)
 	}
 
 	availableSites := []*sites.Site{}
@@ -40,6 +40,9 @@ func main() {
 		}
 	}
 
+	for _, s := range availableSites {
+		log.Println("availableSites", s)
+	}
 	// Available
 	if len(availableSites) > 0 {
 		messages := []string{}
@@ -57,13 +60,13 @@ func main() {
 				record.Status = s.Status
 				db.GetDb().Save(&record)
 			}
-			if len(message) > 250 {
+			if len(message) > 200 {
 				messages = append(messages, message)
 				message = ""
 			}
 		}
 		tail := "💉💊🎊 for more info https://am-i-eligible.covid19vaccine.health.ny.gov/"
-		if len(message)+len(tail) >= 250 {
+		if len(message)+len(tail) >= 200 {
 			messages = append(messages, message)
 			message = ""
 		}
@@ -75,6 +78,8 @@ func main() {
 			if err != nil {
 				log.Fatal(message, err, resp)
 			}
+			log.Println("Tweeted", message)
+			log.Println("Response", resp)
 			config.InReplyToStatusID = tweet.ID
 		}
 	}

@@ -2,7 +2,6 @@ package twitter
 
 import (
 	// other imports
-	"log"
 
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
@@ -40,12 +39,11 @@ func GetClient(creds *Credentials) (*twitter.Client, error) {
 
 	// we can retrieve the user and verify if the credentials
 	// we have used successfully allow us to log in!
-	user, _, err := client.Accounts.VerifyCredentials(verifyParams)
+	_, _, err := client.Accounts.VerifyCredentials(verifyParams)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("User's ACCOUNT:\n%+v\n", user)
 	return client, nil
 }
 
