@@ -57,13 +57,13 @@ func main() {
 				record.Status = s.Status
 				db.GetDb().Save(&record)
 			}
-			if len(message) > 280 {
+			if len(message) > 250 {
 				messages = append(messages, message)
 				message = ""
 			}
 		}
 		tail := "💉💊🎊 for more info https://am-i-eligible.covid19vaccine.health.ny.gov/"
-		if len(message)+len(tail) >= 280 {
+		if len(message)+len(tail) >= 250 {
 			messages = append(messages, message)
 			message = ""
 		}
