@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	avaliable string = "AA"
+	avaliable string = "Y"
 )
 
 type Sites struct {
